@@ -249,7 +249,7 @@ openclaw-android/
 ├── update-core.sh              # 기존 설치 환경 경량 업데이터
 ├── uninstall.sh                # 깔끔한 제거
 ├── patches/
-│   ├── bionic-compat.js        # 플랫폼 오버라이드 + os.networkInterfaces() + os.cpus() 패치
+│   ├── glibc-compat.js        # Node.js 런타임 패치 (os.cpus, networkInterfaces)
 │   ├── termux-compat.h         # C/C++ 호환 심 (renameat2 syscall 래퍼)
 │   ├── spawn.h                 # Termux용 POSIX spawn 스텁 헤더
 │   ├── patch-paths.sh          # OpenClaw 내 하드코딩 경로 수정
@@ -327,7 +327,7 @@ Termux에서 필요한 디렉토리 구조를 생성합니다.
 - 설정되는 환경변수:
   - `TMPDIR=$PREFIX/tmp` — `/tmp` 대신 Termux 임시 디렉토리 사용
   - `TMP`, `TEMP` — `TMPDIR`과 동일 (일부 도구 호환용)
-  - `NODE_OPTIONS="-r .../bionic-compat.js"` — 모든 Node 프로세스에 Bionic 호환 패치 자동 로드
+  - `NODE_OPTIONS="-r .../glibc-compat.js"` — 모든 Node 프로세스에 glibc 호환 패치 자동 로드
   - `CONTAINER=1` — systemd 존재 여부 확인을 우회
   - `CFLAGS="-Wno-error=implicit-function-declaration"` — Clang이 implicit function declaration을 에러로 처리하는 것을 방지 (GCC에서는 정상 빌드되지만 Clang의 엄격한 기본 설정에서 실패하는 `@discordjs/opus` 같은 네이티브 모듈 빌드에 필요)
   - `CXXFLAGS="-include .../termux-compat.h"` — 네이티브 모듈 빌드 시 C/C++ 호환 심 자동 포함
@@ -343,14 +343,14 @@ Termux에서 필요한 디렉토리 구조를 생성합니다.
 OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
 
 1. 호환 패치 파일을 `~/.openclaw-android/patches/`에 복사:
-   - `bionic-compat.js` — Node.js 런타임 패치 (npm install 과정에서도 필요)
+   - `glibc-compat.js` — Node.js 런타임 패치 (npm install 과정에서도 필요)
    - `termux-compat.h` — C/C++ 빌드 호환 심 (renameat2 syscall 래퍼)
    - `spawn.h` → `$PREFIX/include/spawn.h` — POSIX spawn 스텁 헤더 (없는 경우 설치)
 2. `update.sh` wrapper를 `$PREFIX/bin/oaupdate`에 설치 (간편 업데이트용)
 3. `npm install -g openclaw@latest` 실행
 4. `clawhub` (스킬 매니저)를 `npm install -g clawdhub`로 글로벌 설치. Node.js v24+ Termux 환경에서는 `undici`가 번들되지 않으므로, 누락 시 clawhub 디렉토리에 직접 설치
 5. `patches/apply-patches.sh`가 패치를 일괄 적용:
-   - `bionic-compat.js` 최종 복사 확인
+   - `glibc-compat.js` 최종 복사 확인
    - `systemctl` 스텁을 `$PREFIX/bin/systemctl`에 설치 — Termux에는 systemd가 없으므로, systemd 서비스 관리 호출을 가로채는 최소한의 스크립트
    - `patches/patch-paths.sh` 실행 — 설치된 OpenClaw JS 파일 내 하드코딩된 경로를 sed로 치환:
      - `"/tmp"` / `'/tmp'` → `"$PREFIX/tmp"` / `'$PREFIX/tmp'`
@@ -377,7 +377,7 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
 | TMPDIR | 환경변수 설정됨 |
 | NODE_OPTIONS | 환경변수 설정됨 |
 | CONTAINER | `1`로 설정됨 |
-| bionic-compat.js | `~/.openclaw-android/patches/`에 파일 존재 |
+| glibc-compat.js | `~/.openclaw-android/patches/`에 파일 존재 |
 | 디렉토리 | `~/.openclaw-android`, `~/.openclaw`, `$PREFIX/tmp` 존재 |
 | .bashrc | 환경변수 블록 포함 |
 
@@ -419,7 +419,7 @@ GitHub에서 최신 패치 파일과 스크립트를 다운로드합니다.
 | 파일 | 용도 | 실패 시 |
 |------|------|---------|
 | `setup-env.sh` | `.bashrc` 환경변수 블록 갱신 | **종료** (필수) |
-| `bionic-compat.js` | Node.js 런타임 호환 패치 | 경고 |
+| `glibc-compat.js` | Node.js 런타임 호환 패치 | 경고 |
 | `termux-compat.h` | C/C++ 빌드 호환 헤더 | 경고 |
 | `spawn.h` | POSIX spawn 스텁 (이미 있으면 스킵) | 경고 |
 | `systemctl` | Termux용 systemd 스텁 | 경고 |

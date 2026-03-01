@@ -116,10 +116,10 @@ source ~/.bashrc
 
 또는 Termux 앱을 완전히 종료했다가 다시 여세요.
 
-## "Cannot find module bionic-compat.js" 에러
+## "Cannot find module glibc-compat.js" 에러
 
 ```
-Error: Cannot find module '/data/data/com.termux/files/home/.openclaw-lite/patches/bionic-compat.js'
+Error: Cannot find module '/data/data/com.termux/files/home/.openclaw-lite/patches/glibc-compat.js'
 ```
 
 ### 원인
@@ -226,7 +226,7 @@ Gateway status failed: Error: Gateway service install not supported on android
 
 ### 원인
 
-`bionic-compat.js`의 `process.platform` 오버라이드가 적용되지 않은 상태입니다.
+`glibc-compat.js`의 `process.platform` 오버라이드가 적용되지 않은 상태입니다.
 
 ### 해결 방법
 
@@ -242,7 +242,7 @@ echo $NODE_OPTIONS
 source ~/.bashrc
 ```
 
-`NODE_OPTIONS`가 설정되어 있는데도 에러가 나면, `bionic-compat.js` 파일이 최신인지 확인:
+`NODE_OPTIONS`가 설정되어 있는데도 에러가 나면, `glibc-compat.js` 파일이 최신인지 확인:
 
 ```bash
 node -e "console.log(process.platform)"
