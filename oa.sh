@@ -3,7 +3,7 @@
 # Installed to $PREFIX/bin/oa
 set -euo pipefail
 
-OA_VERSION="0.8.2"
+OA_VERSION="1.0.0"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -26,6 +26,9 @@ show_help() {
     echo "  ide            Start code-server (browser IDE)"
     echo "  ide --stop     Stop code-server"
     echo "  ide --status   Check if code-server is running"
+    echo "  opencode       Start OpenCode"
+    echo "  opencode --stop   Stop OpenCode"
+    echo "  opencode --status Check if OpenCode is running"
     echo "  --update       Update OpenClaw and Android patches"
     echo "  --uninstall    Remove OpenClaw on Android"
     echo "  --status       Show installation status"
@@ -91,6 +94,64 @@ cmd_ide() {
         *)
             echo -e "${RED}Unknown ide option: $subcmd${NC}"
             echo "Usage: oa ide [--stop|--status]"
+            exit 1
+            ;;
+    esac
+}
+
+# ── OpenCode ──────────────────────────────────
+
+cmd_opencode() {
+    local subcmd="${1:-start}"
+
+    case "$subcmd" in
+        --stop)
+            if pgrep -f "opencode" &>/dev/null; then
+                pkill -f "ld.so.opencode"
+                echo -e "${GREEN}[OK]${NC}   OpenCode stopped"
+            else
+                echo "OpenCode is not running"
+            fi
+            ;;
+        --status)
+            if pgrep -f "ld.so.opencode" &>/dev/null; then
+                echo -e "${GREEN}[OK]${NC}   OpenCode is running"
+            else
+                echo "OpenCode is not running"
+                echo "  Start with: oa opencode"
+            fi
+
+            echo ""
+            if command -v opencode &>/dev/null; then
+                local oc_ver
+                oc_ver=$(opencode --version 2>/dev/null || echo "installed")
+                echo "  OpenCode:         $oc_ver"
+            else
+                echo -e "  OpenCode:         ${RED}not installed${NC}"
+            fi
+
+            if command -v oh-my-opencode &>/dev/null; then
+                local omo_ver
+                omo_ver=$(oh-my-opencode version 2>/dev/null || oh-my-opencode --version 2>/dev/null || echo "installed")
+                echo "  oh-my-opencode:   $omo_ver"
+            else
+                echo -e "  oh-my-opencode:   ${YELLOW}not installed${NC}"
+            fi
+            ;;
+        start|"")
+            if ! command -v opencode &>/dev/null; then
+                echo -e "${RED}[FAIL]${NC} OpenCode not found"
+                echo "  Run 'oa --update' to install it"
+                exit 1
+            fi
+            echo "Starting OpenCode..."
+            echo "  Press Ctrl+C to stop"
+            echo ""
+            exec opencode
+            ;;
+        *)
+            echo -e "${RED}Unknown opencode option: $subcmd${NC}"
+            echo "Usage: oa opencode [--stop|--status]"
             exit 1
             ;;
     esac
@@ -188,11 +249,42 @@ cmd_status() {
         echo -e "  code-server: ${YELLOW}not installed${NC}"
     fi
 
+    if command -v opencode &>/dev/null; then
+        local oc_ver
+        oc_ver=$(opencode --version 2>/dev/null || echo "installed")
+        local oc_status="stopped"
+        if pgrep -f "ld.so.opencode" &>/dev/null; then
+            oc_status="running"
+        fi
+        echo "  OpenCode:    ${oc_ver} ($oc_status)"
+    else
+        echo -e "  OpenCode:    ${YELLOW}not installed${NC}"
+    fi
+
+    if command -v oh-my-opencode &>/dev/null; then
+        echo "  omo:         $(oh-my-opencode version 2>/dev/null || oh-my-opencode --version 2>/dev/null || echo 'installed')"
+    else
+        echo -e "  omo:         ${YELLOW}not installed${NC}"
+    fi
+
+    echo ""
+    echo -e "${BOLD}Architecture${NC}"
+    if [ -f "$OPENCLAW_DIR/.glibc-arch" ]; then
+        echo -e "  ${GREEN}[OK]${NC}   glibc (v1.0.0+)"
+    else
+        echo -e "  ${YELLOW}[OLD]${NC} Bionic (pre-1.0.0) — run 'oa --update' to migrate"
+    fi
+
+    if [ "${OA_GLIBC:-}" = "1" ]; then
+        echo -e "  ${GREEN}[OK]${NC}   OA_GLIBC=1 (environment)"
+    else
+        echo -e "  ${YELLOW}[MISS]${NC} OA_GLIBC not set — run 'source ~/.bashrc'"
+    fi
+
     echo ""
     echo -e "${BOLD}Environment${NC}"
     echo "  PREFIX:            ${PREFIX:-not set}"
     echo "  TMPDIR:            ${TMPDIR:-not set}"
-    echo "  NODE_OPTIONS:      $([ -n "${NODE_OPTIONS:-}" ] && echo "set" || echo "not set")"
     echo "  CONTAINER:         ${CONTAINER:-not set}"
     echo "  CLAWDHUB_WORKDIR:  ${CLAWDHUB_WORKDIR:-not set}"
 
@@ -208,19 +300,41 @@ cmd_status() {
     done
 
     echo ""
-    echo -e "${BOLD}Patches${NC}"
-    local CHECK_FILES=(
-        "$OPENCLAW_DIR/patches/bionic-compat.js"
-        "$OPENCLAW_DIR/patches/termux-compat.h"
-        "${PREFIX:-}/include/spawn.h"
+    echo -e "${BOLD}glibc Components${NC}"
+    local GLIBC_FILES=(
+        "$OPENCLAW_DIR/patches/glibc-compat.js"
+        "$OPENCLAW_DIR/.glibc-arch"
+        "${PREFIX:-}/glibc/lib/ld-linux-aarch64.so.1"
     )
-    for file in "${CHECK_FILES[@]}"; do
+    for file in "${GLIBC_FILES[@]}"; do
         if [ -f "$file" ]; then
             echo -e "  ${GREEN}[OK]${NC}   $(basename "$file")"
         else
             echo -e "  ${RED}[MISS]${NC} $(basename "$file")"
         fi
     done
+
+    # Check glibc node wrapper
+    local NODE_WRAPPER="$OPENCLAW_DIR/node/bin/node"
+    if [ -f "$NODE_WRAPPER" ] && head -1 "$NODE_WRAPPER" 2>/dev/null | grep -q "bash"; then
+        echo -e "  ${GREEN}[OK]${NC}   glibc node wrapper"
+    else
+        echo -e "  ${RED}[MISS]${NC} glibc node wrapper"
+    fi
+
+    # Check OpenCode wrapper
+    if [ -f "${PREFIX:-}/bin/opencode" ]; then
+        echo -e "  ${GREEN}[OK]${NC}   opencode command"
+    else
+        echo -e "  ${YELLOW}[MISS]${NC} opencode command"
+    fi
+
+    # Check oh-my-opencode wrapper
+    if [ -f "${PREFIX:-}/bin/oh-my-opencode" ]; then
+        echo -e "  ${GREEN}[OK]${NC}   oh-my-opencode command"
+    else
+        echo -e "  ${YELLOW}[MISS]${NC} oh-my-opencode command"
+    fi
 
     echo ""
     echo -e "${BOLD}Configuration${NC}"
@@ -237,6 +351,9 @@ cmd_status() {
     fi
     if [ -d "$HOME/.openclaw" ]; then
         echo "  ~/.openclaw:          $(du -sh "$HOME/.openclaw" 2>/dev/null | cut -f1)"
+    fi
+    if [ -d "$HOME/.bun" ]; then
+        echo "  ~/.bun:               $(du -sh "$HOME/.bun" 2>/dev/null | cut -f1)"
     fi
     local AVAIL_MB
     AVAIL_MB=$(df "${PREFIX:-/}" 2>/dev/null | awk 'NR==2 {print int($4/1024)}') || true
@@ -277,6 +394,10 @@ case "${1:-}" in
     ide)
         shift
         cmd_ide "${1:-start}"
+        ;;
+    opencode)
+        shift
+        cmd_opencode "${1:-start}"
         ;;
     --update)
         cmd_update
