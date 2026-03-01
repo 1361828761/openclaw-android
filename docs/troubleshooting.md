@@ -116,10 +116,10 @@ source ~/.bashrc
 
 Or fully close and reopen the Termux app.
 
-## "Cannot find module bionic-compat.js" error
+## "Cannot find module glibc-compat.js" error
 
 ```
-Error: Cannot find module '/data/data/com.termux/files/home/.openclaw-lite/patches/bionic-compat.js'
+Error: Cannot find module '/data/data/com.termux/files/home/.openclaw-lite/patches/glibc-compat.js'
 ```
 
 ### Cause
@@ -226,7 +226,7 @@ Gateway status failed: Error: Gateway service install not supported on android
 
 ### Cause
 
-The `process.platform` override in `bionic-compat.js` is not being applied.
+The `process.platform` override in `glibc-compat.js` is not being applied.
 
 ### Solution
 

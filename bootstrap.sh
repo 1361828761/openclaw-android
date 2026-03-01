@@ -33,6 +33,7 @@ FILES=(
     "patches/apply-patches.sh"
     "patches/systemctl"
     "patches/argon2-stub.js"
+    "patches/spawn.h"
     "scripts/check-env.sh"
     "scripts/install-deps.sh"
     "scripts/setup-paths.sh"

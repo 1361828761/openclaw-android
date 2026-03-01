@@ -20,6 +20,29 @@
 
 const os = require('os');
 const fs = require('fs');
+const path = require('path');
+
+// ─── process.execPath fix ────────────────────────────────────
+// When node runs via grun (ld.so node.real), process.execPath points to
+// ld.so instead of the node wrapper. Apps that spawn child node processes
+// using process.execPath (e.g., openclaw) will call ld.so directly,
+// bypassing the wrapper's LD_PRELOAD unset and compat loading.
+// Fix: point process.execPath to the wrapper script.
+
+const _wrapperPath = path.join(
+  process.env.HOME || '/data/data/com.termux/files/home',
+  '.openclaw-android', 'node', 'bin', 'node'
+);
+try {
+  if (fs.existsSync(_wrapperPath)) {
+    Object.defineProperty(process, 'execPath', {
+      value: _wrapperPath,
+      writable: true,
+      configurable: true,
+    });
+  }
+} catch {}
+
 
 // ─── os.cpus() fallback ─────────────────────────────────────
 // Android 8+ (API 26+) blocks /proc/stat via SELinux + hidepid=2.
