@@ -67,6 +67,17 @@
 - 약 1GB 이상의 여유 저장공간
 - Wi-Fi 또는 모바일 데이터 연결
 
+## 동작 원리
+
+설치 스크립트는 Termux와 일반 Linux 환경의 차이를 자동으로 해결합니다. 사용자가 직접 할 일은 없으며, 설치 명령어 하나로 아래 내용이 모두 처리됩니다:
+
+1. **glibc 환경** — glibc 런타임(pacman의 glibc-runner)을 설치하여 표준 Linux 바이너리가 수정 없이 실행되도록 설정
+2. **Node.js (glibc)** — 공식 Node.js linux-arm64 바이너리를 다운로드하고 ld.so 로더 스크립트로 래핑 (patchelf는 Android에서 segfault를 유발하므로 미사용)
+3. **경로 변환** — 일반 Linux 경로(`/tmp`, `/bin/sh`, `/usr/bin/env`)를 Termux 경로로 자동 변환
+4. **임시 폴더 설정** — Android에서 접근 가능한 임시 폴더로 자동 설정
+5. **서비스 관리자 우회** — systemd 없이도 정상 동작하도록 설정
+6. **OpenCode 통합** — 선택 시, proot + ld.so 결합 방식으로 Bun 독립 실행 바이너리인 OpenCode + oh-my-opencode 설치
+
 ## 처음부터 설치하기 (초기화된 폰 기준)
 
 1. [폰 준비](#1단계-폰-준비)
@@ -200,17 +211,6 @@ oa --update && source ~/.bashrc
 ## 문제 해결
 
 자세한 트러블슈팅 가이드는 [문제 해결 문서](docs/troubleshooting.ko.md)를 참고하세요.
-
-## 동작 원리
-
-설치 스크립트는 Termux와 일반 Linux 환경의 차이를 자동으로 해결합니다. 사용자가 직접 할 일은 없으며, 설치 명령어 하나로 아래 내용이 모두 처리됩니다:
-
-1. **glibc 환경** — glibc 런타임(pacman의 glibc-runner)을 설치하여 표준 Linux 바이너리가 수정 없이 실행되도록 설정
-2. **Node.js (glibc)** — 공식 Node.js linux-arm64 바이너리를 다운로드하고 ld.so 로더 스크립트로 래핑 (patchelf는 Android에서 segfault를 유발하므로 미사용)
-3. **경로 변환** — 일반 Linux 경로(`/tmp`, `/bin/sh`, `/usr/bin/env`)를 Termux 경로로 자동 변환
-4. **임시 폴더 설정** — Android에서 접근 가능한 임시 폴더로 자동 설정
-5. **서비스 관리자 우회** — systemd 없이도 정상 동작하도록 설정
-6. **OpenCode 통합** — 선택 시, proot + ld.so 결합 방식으로 Bun 독립 실행 바이너리인 OpenCode + oh-my-opencode 설치
 
 ## 성능
 

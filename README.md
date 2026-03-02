@@ -67,6 +67,17 @@ The standard approach to running OpenClaw on Android requires installing proot-d
 - ~1GB free storage
 - Wi-Fi or mobile data connection
 
+## What It Does
+
+The installer automatically resolves the differences between Termux and standard Linux. There's nothing you need to do manually — the single install command handles all of these:
+
+1. **glibc environment** — Installs a glibc runtime (via pacman's glibc-runner) so standard Linux binaries run without modification
+2. **Node.js (glibc)** — Downloads official Node.js linux-arm64 and wraps it with an ld.so loader script (no patchelf, which causes segfault on Android)
+3. **Path conversion** — Automatically converts standard Linux paths (`/tmp`, `/bin/sh`, `/usr/bin/env`) to Termux paths
+4. **Temp folder setup** — Configures an accessible temp folder for Android
+5. **Service manager bypass** — Configures normal operation without systemd
+6. **OpenCode integration** — If selected, installs OpenCode + oh-my-opencode using proot + ld.so concatenation for Bun standalone binaries
+
 ## Step-by-Step Setup (from a fresh phone)
 
 1. [Prepare Your Phone](#step-1-prepare-your-phone)
@@ -200,17 +211,6 @@ Already up-to-date components are skipped. Components you haven't installed are 
 ## Troubleshooting
 
 See the [Troubleshooting Guide](docs/troubleshooting.md) for detailed solutions.
-
-## What It Does
-
-The installer automatically resolves the differences between Termux and standard Linux. There's nothing you need to do manually — the single install command handles all of these:
-
-1. **glibc environment** — Installs a glibc runtime (via pacman's glibc-runner) so standard Linux binaries run without modification
-2. **Node.js (glibc)** — Downloads official Node.js linux-arm64 and wraps it with an ld.so loader script (no patchelf, which causes segfault on Android)
-3. **Path conversion** — Automatically converts standard Linux paths (`/tmp`, `/bin/sh`, `/usr/bin/env`) to Termux paths
-4. **Temp folder setup** — Configures an accessible temp folder for Android
-5. **Service manager bypass** — Configures normal operation without systemd
-6. **OpenCode integration** — If selected, installs OpenCode + oh-my-opencode using proot + ld.so concatenation for Bun standalone binaries
 
 ## Performance
 
