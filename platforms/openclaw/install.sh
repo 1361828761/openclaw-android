@@ -17,6 +17,17 @@ cp "$SCRIPT_DIR/../../patches/glibc-compat.js" "$PROJECT_DIR/patches/glibc-compa
 cp "$SCRIPT_DIR/../../patches/systemctl" "$PREFIX/bin/systemctl"
 chmod +x "$PREFIX/bin/systemctl"
 
+# Clean up existing installation for smooth reinstall
+if npm list -g openclaw &>/dev/null 2>&1 || [ -d "$PREFIX/lib/node_modules/openclaw" ]; then
+    echo "Existing installation detected \u2014 cleaning up for reinstall..."
+    npm uninstall -g openclaw 2>/dev/null || true
+    rm -rf "$PREFIX/lib/node_modules/openclaw" 2>/dev/null || true
+    npm uninstall -g clawdhub 2>/dev/null || true
+    rm -rf "$PREFIX/lib/node_modules/clawdhub" 2>/dev/null || true
+    rm -rf "$HOME/.npm/_cacache" 2>/dev/null || true
+    echo -e "${GREEN}[OK]${NC}   Previous installation cleaned"
+fi
+
 echo "Running: npm install -g openclaw@latest --ignore-scripts"
 echo "This may take several minutes..."
 echo ""

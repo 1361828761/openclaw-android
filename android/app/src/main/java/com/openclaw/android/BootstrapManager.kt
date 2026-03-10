@@ -47,7 +47,7 @@ class BootstrapManager(private val context: Context) {
         bootstrapInstalled = isInstalled(),
         runtimeInstalled = prefixDir.resolve("bin/node").exists(),
         wwwInstalled = wwwDir.resolve("index.html").exists(),
-        platformInstalled = false // TODO: check active platform
+        platformInstalled = File(homeDir, ".openclaw-android/.post-setup-done").exists()
     )
 
     /**

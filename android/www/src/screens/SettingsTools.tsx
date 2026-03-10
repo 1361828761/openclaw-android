@@ -13,12 +13,15 @@ interface Tool {
 const TOOLS: Tool[] = [
   { id: 'tmux', name: 'tmux', desc: 'Terminal multiplexer', category: 'Terminal Tools' },
   { id: 'code-server', name: 'code-server', desc: 'VS Code in browser', category: 'Terminal Tools' },
-  { id: 'claude-code', name: 'Claude Code', desc: 'Anthropic AI CLI', category: 'AI CLI Tools' },
-  { id: 'gemini-cli', name: 'Gemini CLI', desc: 'Google AI CLI', category: 'AI CLI Tools' },
-  { id: 'codex-cli', name: 'Codex CLI', desc: 'OpenAI AI CLI', category: 'AI CLI Tools' },
-  { id: 'openssh-server', name: 'openssh-server', desc: 'SSH remote access', category: 'Network & Remote Access' },
-  { id: 'ttyd', name: 'ttyd', desc: 'Web terminal access', category: 'Network & Remote Access' },
-  { id: 'dufs', name: 'dufs', desc: 'File server (WebDAV)', category: 'Network & Remote Access' },
+  { id: 'opencode', name: 'OpenCode', desc: 'AI coding assistant (TUI)', category: 'AI Tools' },
+  { id: 'claude-code', name: 'Claude Code', desc: 'Anthropic AI CLI', category: 'AI Tools' },
+  { id: 'gemini-cli', name: 'Gemini CLI', desc: 'Google AI CLI', category: 'AI Tools' },
+  { id: 'codex-cli', name: 'Codex CLI', desc: 'OpenAI AI CLI', category: 'AI Tools' },
+  { id: 'openssh-server', name: 'SSH Server', desc: 'SSH remote access', category: 'Network & Access' },
+  { id: 'ttyd', name: 'ttyd', desc: 'Web terminal access', category: 'Network & Access' },
+  { id: 'dufs', name: 'dufs', desc: 'File server (WebDAV)', category: 'Network & Access' },
+  { id: 'android-tools', name: 'Android Tools', desc: 'ADB for disabling Phantom Process Killer', category: 'System' },
+  { id: 'chromium', name: 'Chromium', desc: 'Browser automation (~400MB)', category: 'System' },
 ]
 
 export function SettingsTools() {

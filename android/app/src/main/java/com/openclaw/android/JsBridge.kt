@@ -9,6 +9,8 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.webkit.JavascriptInterface
 import com.google.gson.Gson
+import android.util.Log
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,7 +27,28 @@ class JsBridge(
     private val eventBridge: EventBridge
 ) {
     private val gson = Gson()
+    private val TAG = "JsBridge"
 
+    /**
+     * Launch a coroutine on Dispatchers.IO with error handling.
+     * Catches all exceptions to prevent app crashes from unhandled coroutine failures.
+     * Errors are logged and emitted to the WebView via EventBridge.
+     */
+    private fun launchWithErrorHandling(
+        errorEventType: String = "error",
+        errorContext: Map<String, Any?> = emptyMap(),
+        block: suspend CoroutineScope.() -> Unit
+    ) {
+        val handler = CoroutineExceptionHandler { _, throwable ->
+            Log.e(TAG, "Coroutine error [$errorEventType]: ${throwable.message}", throwable)
+            eventBridge.emit(errorEventType, errorContext + mapOf(
+                "error" to (throwable.message ?: "Unknown error"),
+                "progress" to 0f,
+                "message" to "Error: ${throwable.message}"
+            ))
+        }
+        CoroutineScope(Dispatchers.IO + handler).launch(block = block)
+    }
     // ═══════════════════════════════════════════
     // Terminal domain
     // ═══════════════════════════════════════════
@@ -103,7 +126,10 @@ class JsBridge(
 
     @JavascriptInterface
     fun startSetup() {
-        CoroutineScope(Dispatchers.IO).launch {
+        launchWithErrorHandling(
+            errorEventType = "setup_progress",
+            errorContext = mapOf("progress" to 0f)
+        ) {
             bootstrapManager.startSetup { progress, message ->
                 eventBridge.emit(
                     "setup_progress",
@@ -153,7 +179,10 @@ class JsBridge(
 
     @JavascriptInterface
     fun installPlatform(id: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        launchWithErrorHandling(
+            errorEventType = "install_progress",
+            errorContext = mapOf("target" to id)
+        ) {
             eventBridge.emit("install_progress",
                 mapOf("target" to id, "progress" to 0f, "message" to "Installing $id..."))
             val env = EnvironmentBuilder.build(activity)
@@ -171,7 +200,10 @@ class JsBridge(
 
     @JavascriptInterface
     fun uninstallPlatform(id: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        launchWithErrorHandling(
+            errorEventType = "install_progress",
+            errorContext = mapOf("target" to id)
+        ) {
             val env = EnvironmentBuilder.build(activity)
             CommandRunner.runSync("npm uninstall -g $id", env, bootstrapManager.homeDir)
         }
@@ -201,29 +233,72 @@ class JsBridge(
         val env = EnvironmentBuilder.build(activity)
         val prefix = bootstrapManager.prefixDir.absolutePath
         val tools = mutableListOf<Map<String, String>>()
-        val checks = mapOf(
+
+        // Termux packages - check binary path
+        val pkgChecks = mapOf(
             "tmux" to "$prefix/bin/tmux",
             "ttyd" to "$prefix/bin/ttyd",
-            "code-server" to "$prefix/bin/code-server",
-            "openssh-server" to "$prefix/bin/sshd"
+            "dufs" to "$prefix/bin/dufs",
+            "openssh-server" to "$prefix/bin/sshd",
+            "android-tools" to "$prefix/bin/adb",
+            "code-server" to "$prefix/bin/code-server"
         )
-        for ((id, path) in checks) {
+        for ((id, path) in pkgChecks) {
             if (java.io.File(path).exists()) {
                 tools.add(mapOf("id" to id, "name" to id, "version" to "installed"))
             }
         }
+
+        // Chromium - check multiple possible paths
+        if (java.io.File("$prefix/bin/chromium-browser").exists() || java.io.File("$prefix/bin/chromium").exists()) {
+            tools.add(mapOf("id" to "chromium", "name" to "chromium", "version" to "installed"))
+        }
+
+        // npm global packages - check via command -v
+        val npmTools = listOf("claude-code", "gemini-cli", "codex-cli", "opencode")
+        for (id in npmTools) {
+            val binName = when (id) {
+                "claude-code" -> "claude"
+                "gemini-cli" -> "gemini"
+                "codex-cli" -> "codex"
+                else -> id
+            }
+            val result = CommandRunner.runSync("command -v $binName 2>/dev/null", env, bootstrapManager.prefixDir, timeoutMs = 5_000)
+            if (result.stdout.trim().isNotEmpty()) {
+                tools.add(mapOf("id" to id, "name" to id, "version" to "installed"))
+            }
+        }
+
         return gson.toJson(tools)
     }
 
     @JavascriptInterface
     fun installTool(id: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        launchWithErrorHandling(
+            errorEventType = "install_progress",
+            errorContext = mapOf("target" to id)
+        ) {
             val env = EnvironmentBuilder.build(activity)
             val cmd = when (id) {
-                "tmux", "ttyd", "openssh-server" ->
-                    "${bootstrapManager.prefixDir.absolutePath}/bin/apt-get install -y $id"
+                // Termux packages (pkg)
+                "tmux", "ttyd", "dufs", "openssh-server", "android-tools" ->
+                    "${bootstrapManager.prefixDir.absolutePath}/bin/apt-get install -y ${if (id == "openssh-server") "openssh" else id}"
+                // Chromium (from x11-repo)
+                "chromium" ->
+                    "${bootstrapManager.prefixDir.absolutePath}/bin/apt-get install -y chromium"
+                // code-server (custom)
                 "code-server" ->
                     "npm install -g code-server"
+                // npm-based AI CLI tools
+                "claude-code" ->
+                    "npm install -g @anthropic-ai/claude-code"
+                "gemini-cli" ->
+                    "npm install -g @google/gemini-cli"
+                "codex-cli" ->
+                    "npm install -g @openai/codex"
+                // OpenCode (Bun-based)
+                "opencode" ->
+                    "npm install -g opencode"
                 else -> "echo 'Unknown tool: $id'"
             }
             eventBridge.emit("install_progress",
@@ -239,23 +314,45 @@ class JsBridge(
 
     @JavascriptInterface
     fun uninstallTool(id: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        launchWithErrorHandling(
+            errorEventType = "install_progress",
+            errorContext = mapOf("target" to id)
+        ) {
             val env = EnvironmentBuilder.build(activity)
-            CommandRunner.runSync(
-                "${bootstrapManager.prefixDir.absolutePath}/bin/apt-get remove -y $id",
-                env, bootstrapManager.homeDir
-            )
+            val cmd = when (id) {
+                "tmux", "ttyd", "dufs", "openssh-server", "android-tools", "chromium" ->
+                    "${bootstrapManager.prefixDir.absolutePath}/bin/apt-get remove -y ${if (id == "openssh-server") "openssh" else id}"
+                "code-server" ->
+                    "npm uninstall -g code-server"
+                "claude-code" ->
+                    "npm uninstall -g @anthropic-ai/claude-code"
+                "gemini-cli" ->
+                    "npm uninstall -g @google/gemini-cli"
+                "codex-cli" ->
+                    "npm uninstall -g @openai/codex"
+                "opencode" ->
+                    "npm uninstall -g opencode"
+                else -> "echo 'Unknown tool: $id'"
+            }
+            CommandRunner.runSync(cmd, env, bootstrapManager.homeDir)
         }
     }
 
     @JavascriptInterface
     fun isToolInstalled(id: String): String {
         val prefix = bootstrapManager.prefixDir.absolutePath
-        val binPath = when (id) {
-            "openssh-server" -> "$prefix/bin/sshd"
-            else -> "$prefix/bin/$id"
+        val env = EnvironmentBuilder.build(activity)
+        val exists = when (id) {
+            "openssh-server" -> java.io.File("$prefix/bin/sshd").exists()
+            "tmux", "ttyd", "dufs", "android-tools" -> java.io.File("$prefix/bin/${if (id == "android-tools") "adb" else id}").exists()
+            "chromium" -> java.io.File("$prefix/bin/chromium-browser").exists() || java.io.File("$prefix/bin/chromium").exists()
+            "code-server" -> java.io.File("$prefix/bin/code-server").exists()
+            else -> {
+                // npm global packages: check via command -v
+                val result = CommandRunner.runSync("command -v $id 2>/dev/null", env, bootstrapManager.prefixDir, timeoutMs = 5_000)
+                result.stdout.trim().isNotEmpty()
+            }
         }
-        val exists = java.io.File(binPath).exists()
         return gson.toJson(mapOf("installed" to exists))
     }
 
@@ -272,7 +369,10 @@ class JsBridge(
 
     @JavascriptInterface
     fun runCommandAsync(callbackId: String, cmd: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        launchWithErrorHandling(
+            errorEventType = "command_output",
+            errorContext = mapOf("callbackId" to callbackId, "done" to true)
+        ) {
             val env = EnvironmentBuilder.build(activity)
             CommandRunner.runStreaming(cmd, env, bootstrapManager.homeDir) { output ->
                 eventBridge.emit(
@@ -318,7 +418,10 @@ class JsBridge(
 
     @JavascriptInterface
     fun applyUpdate(component: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        launchWithErrorHandling(
+            errorEventType = "install_progress",
+            errorContext = mapOf("target" to component)
+        ) {
             eventBridge.emit("install_progress",
                 mapOf("target" to component, "progress" to 0f, "message" to "Updating $component..."))
 
@@ -326,7 +429,7 @@ class JsBridge(
                 "www" -> {
                     // Download www.zip → staging → atomic replace → reload
                     try {
-                        val url = kotlinx.coroutines.runBlocking { UrlResolver(activity).getWwwUrl() }
+                        val url = UrlResolver(activity).getWwwUrl()
                         val stagingWww = java.io.File(activity.cacheDir, "www-staging")
                         stagingWww.deleteRecursively()
                         stagingWww.mkdirs()

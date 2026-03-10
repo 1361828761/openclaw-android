@@ -35,7 +35,7 @@ export function SettingsAbout() {
 
       <div style={{ textAlign: 'center', padding: '24px 0' }}>
         <div style={{ fontSize: 48, marginBottom: 8 }}>🧠</div>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>OpenClaw on Android</div>
+        <div style={{ fontSize: 20, fontWeight: 700 }}>Claw on Android</div>
       </div>
 
       <div className="section-title">Version</div>
@@ -77,7 +77,7 @@ export function SettingsAbout() {
             bridge.call('openSystemSettings', 'app_info')
           }}
         >
-          View on GitHub
+          App Info
         </button>
       </div>
 

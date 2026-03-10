@@ -12,23 +12,20 @@ Because Android deserves a shell.
 
 ## No Linux install required
 
-The standard approach to running OpenClaw on Android requires installing proot-distro with Linux, adding 700MB-1GB of overhead. OpenClaw on Android eliminates this by installing a lightweight glibc runtime directly into Termux, letting you run OpenClaw without a full Linux distribution.
+The standard approach to running OpenClaw on Android requires installing proot-distro with Linux, adding 700MB-1GB of overhead. OpenClaw on Android eliminates this by installing just the glibc dynamic linker (ld.so), letting you run OpenClaw without a full Linux distribution.
 
-**Standard approach**: Install a full Linux distribution on top of Termux.
+**Standard approach**: Install a full Linux distribution in Termux via proot-distro.
 
 ```
 ┌───────────────────────────────────────────────────┐
 │ Linux Kernel                                      │
 │ ┌───────────────────────────────────────────────┐ │
-│ │ Android · Bionic libc                         │ │
+│ │ Android · Bionic libc · Termux                │ │
 │ │ ┌───────────────────────────────────────────┐ │ │
-│ │ │ Termux                                    │ │ │
+│ │ │ proot-distro · Debian/Ubuntu              │ │ │
 │ │ │ ┌───────────────────────────────────────┐ │ │ │
-│ │ │ │ proot-distro · Debian/Ubuntu          │ │ │ │
-│ │ │ │ ┌───────────────────────────────────┐ │ │ │ │
-│ │ │ │ │ GNU glibc                         │ │ │ │ │
-│ │ │ │ │ Node.js → OpenClaw                │ │ │ │ │
-│ │ │ │ └───────────────────────────────────┘ │ │ │ │
+│ │ │ │ GNU glibc                             │ │ │ │
+│ │ │ │ Node.js → OpenClaw                    │ │ │ │
 │ │ │ └───────────────────────────────────────┘ │ │ │
 │ │ └───────────────────────────────────────────┘ │ │
 │ └───────────────────────────────────────────────┘ │
@@ -41,14 +38,10 @@ The standard approach to running OpenClaw on Android requires installing proot-d
 ┌───────────────────────────────────────────────────┐
 │ Linux Kernel                                      │
 │ ┌───────────────────────────────────────────────┐ │
-│ │ Android · Bionic libc                         │ │
+│ │ Android · Bionic libc · Termux                │ │
 │ │ ┌───────────────────────────────────────────┐ │ │
-│ │ │ Termux + glibc-runner                     │ │ │
-│ │ │ ┌───────────────────────────────────────┐ │ │ │
-│ │ │ │ glibc ld.so (linker only)             │ │ │ │
-│ │ │ │ ld.so → Node.js → OpenClaw            │ │ │ │
-│ │ │ └───────────────────────────────────────┘ │ │ │
-│ │ │ OpenCode · code-server · git ...          │ │ │
+│ │ │ glibc ld.so (linker only)                 │ │ │
+│ │ │ ld.so → Node.js → OpenClaw                │ │ │
 │ │ └───────────────────────────────────────────┘ │ │
 │ └───────────────────────────────────────────────┘ │
 └───────────────────────────────────────────────────┘
@@ -71,7 +64,7 @@ The standard approach to running OpenClaw on Android requires installing proot-d
 
 The installer automatically resolves the differences between Termux and standard Linux. There's nothing you need to do manually — the single install command handles all of these:
 
-1. **glibc environment** — Installs a glibc runtime (via pacman's glibc-runner) so standard Linux binaries run without modification
+1. **glibc environment** — Installs the glibc dynamic linker (via pacman's glibc-runner) so standard Linux binaries run without modification
 2. **Node.js (glibc)** — Downloads official Node.js linux-arm64 and wraps it with an ld.so loader script (no patchelf, which causes segfault on Android)
 3. **Path conversion** — Automatically converts standard Linux paths (`/tmp`, `/bin/sh`, `/usr/bin/env`) to Termux paths
 4. **Temp folder setup** — Configures an accessible temp folder for Android

@@ -1,4 +1,4 @@
-import { useState, useCallback, Fragment } from 'react'
+import { useState, useCallback, useEffect, Fragment } from 'react'
 import { bridge } from '../lib/bridge'
 import { useNativeEvent } from '../lib/useNativeEvent'
 
@@ -43,7 +43,7 @@ export function Setup({ onComplete }: Props) {
   const [tipIndex, setTipIndex] = useState(0)
 
   // Load available platforms
-  useState(() => {
+  useEffect(() => {
     const data = bridge.callJson<Platform[]>('getAvailablePlatforms')
     if (data) {
       setPlatforms(data)
@@ -52,7 +52,7 @@ export function Setup({ onComplete }: Props) {
         { id: 'openclaw', name: 'OpenClaw', icon: '🧠', desc: 'AI agent platform' },
       ])
     }
-  })
+  }, [])
 
   const onProgress = useCallback((data: unknown) => {
     const d = data as { progress?: number; message?: string }
