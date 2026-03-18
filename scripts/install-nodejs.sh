@@ -132,8 +132,8 @@ fi
 # being loaded into the glibc process (causes version mismatch crash)
 # glibc-compat.js is auto-loaded to fix Android kernel quirks (os.cpus() returns 0,
 # os.networkInterfaces() throws EACCES) that affect native module builds and runtime.
-cat > "$NODE_DIR/bin/node" << 'WRAPPER'
-#!/data/data/com.termux/files/usr/bin/bash
+printf '#!%s/bin/bash\n' "$PREFIX" > "$NODE_DIR/bin/node"
+cat >> "$NODE_DIR/bin/node" << 'WRAPPER'
 unset LD_PRELOAD
 _OA_COMPAT="$HOME/.openclaw-android/patches/glibc-compat.js"
 if [ -f "$_OA_COMPAT" ]; then
