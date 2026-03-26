@@ -306,6 +306,7 @@ Each tool is offered via an individual Y/n prompt. You choose which ones to inst
 | [android-tools](https://developer.android.com/tools/adb) | ADB for disabling Phantom Process Killer | `pkg install` |
 | [code-server](https://github.com/coder/code-server) | Browser-based VS Code IDE | Direct download from GitHub |
 | [OpenCode](https://opencode.ai/) | AI coding assistant (TUI). Auto-installs [Bun](https://bun.sh/) and [proot](https://proot-me.github.io/) as dependencies | `bun install -g` |
+| [Chromium](https://www.chromium.org/) | Browser automation for OpenClaw (~400MB) | Custom install script |
 | [Claude Code](https://github.com/anthropics/claude-code) (Anthropic) | AI CLI tool | `npm install -g` |
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) (Google) | AI CLI tool | `npm install -g` |
 | [Codex CLI](https://github.com/openai/codex) (OpenAI) | AI CLI tool | `npm install -g` |
@@ -317,11 +318,12 @@ openclaw-android/
 ├── bootstrap.sh                # curl | bash one-liner installer (downloader)
 ├── install.sh                  # Platform-aware installer (entry point)
 ├── oa.sh                       # Unified CLI (installed as $PREFIX/bin/oa)
+├── post-setup.sh               # Claw App post-bootstrap setup (OTA delivery)
 ├── update.sh                   # Thin wrapper (downloads and runs update-core.sh)
 ├── update-core.sh              # Lightweight updater for existing installations
 ├── uninstall.sh                # Clean removal (orchestrator)
 ├── patches/
-│   ├── glibc-compat.js        # Node.js runtime patches (os.cpus, networkInterfaces, Bonjour loopback guard)
+│   ├── glibc-compat.js        # Node.js runtime patches (os.cpus, networkInterfaces)
 │   ├── argon2-stub.js          # JS stub for argon2 native module (code-server)
 │   ├── termux-compat.h         # C header for Bionic native builds (sharp)
 │   ├── spawn.h                 # POSIX spawn stub header
@@ -335,7 +337,9 @@ openclaw-android/
 │   ├── install-glibc.sh        # glibc-runner installation (L2 conditional)
 │   ├── install-nodejs.sh       # Node.js glibc wrapper installation (L2 conditional)
 │   ├── install-build-tools.sh  # Build tools for native modules (L2 conditional)
+│   ├── backup.sh               # Backup and restore OpenClaw data (oa --backup/--restore)
 │   ├── build-sharp.sh          # Build sharp native module (image processing)
+│   ├── install-chromium.sh     # Install Chromium for browser automation
 │   ├── install-code-server.sh  # Install/update code-server (browser IDE)
 │   ├── install-opencode.sh     # Install OpenCode
 │   ├── setup-env.sh            # Configure environment variables
@@ -356,6 +360,8 @@ openclaw-android/
 ├── tests/
 │   └── verify-install.sh       # Post-install verification (orchestrator + platform)
 └── docs/
+    ├── disable-phantom-process-killer.md    # Keeping Processes Alive guide (EN)
+    ├── disable-phantom-process-killer.ko.md # Keeping Processes Alive guide (KO)
     ├── termux-ssh-guide.md     # Termux SSH setup guide (EN)
     ├── termux-ssh-guide.ko.md  # Termux SSH setup guide (KO)
     ├── troubleshooting.md      # Troubleshooting guide (EN)
@@ -426,10 +432,10 @@ Loads the platform's `config.env` via `load_platform_config()` from `scripts/lib
 
 ### [3/8] Optional Tools Selection (L3)
 
-Presents 9 individual Y/n prompts (via `/dev/tty`) for optional tools:
+Presents 10 individual Y/n prompts (via `/dev/tty`) for optional tools:
 
 - tmux, ttyd, dufs, android-tools
-- code-server, OpenCode
+- code-server, OpenCode, Chromium
 - Claude Code, Gemini CLI, Codex CLI
 
 All selections are collected upfront before any installation begins. This allows the user to make all decisions at once and walk away during the install.
@@ -487,6 +493,7 @@ Installs the tools selected in Step 3:
 - **Termux packages**: tmux, ttyd, dufs, android-tools — installed via `pkg install`
 - **code-server**: Browser-based VS Code IDE with Termux-specific workarounds (replace bundled node, patch argon2, handle hard link failures)
 - **OpenCode**: AI coding assistant using proot + ld.so concatenation for Bun standalone binaries
+- **Chromium**: Browser automation support for OpenClaw (~400MB)
 - **AI CLI tools**: Claude Code, Gemini CLI, Codex CLI — installed via `npm install -g`
 
 ### [8/8] Verification — `tests/verify-install.sh`
@@ -581,6 +588,7 @@ Updates tools that are already installed:
 
 - **code-server**: Runs `install-code-server.sh` in update mode. Skipped if not installed
 - **OpenCode**: Updates if installed; offers to install if not. Requires glibc architecture
+- **Chromium**: Updates if installed. Skipped if not installed
 - **AI CLI tools** (Claude Code, Gemini CLI, Codex CLI): Compares installed vs latest npm version, updates if needed. Tools not installed are not offered for installation
 
 </details>

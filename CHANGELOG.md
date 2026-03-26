@@ -7,7 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Fixed
-- Auto-disable Bonjour/mDNS when Android/Termux only exposes loopback (`lo`) to Node.js, preventing noisy Gateway shutdown warnings like `_openclaw-gw._tcp.local.` goodbye timeouts.
+- Auto-disable Bonjour/mDNS when Android/Termux only exposes loopback (`lo`) to Node.js, preventing noisy Gateway shutdown warnings
+
+### Changed
+- Bump Gson 2.12.1 → 2.13.2
+- Bump androidx.core:core-ktx 1.17.0 → 1.18.0
+- Bump ktlint gradle plugin 14.1.0 → 14.2.0
+- Bump Gradle wrapper 9.3.1 → 9.4.1
+- Bump eslint 9.39.4 → 10.0.3
+- Bump globals 16.5.0 → 17.4.0
+- Bump eslint-plugin-react-refresh 0.4.24 → 0.5.2
+- Bump GitHub Actions: checkout v4→v6, setup-node v4→v6, setup-java v4→v5, upload-artifact v4→v7, download-artifact v4→v8
 
 ## [1.0.6] - 2026-03-10
 
