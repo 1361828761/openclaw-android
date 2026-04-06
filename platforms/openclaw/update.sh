@@ -35,10 +35,16 @@ fi
 # Reinstall dependencies without --ignore-scripts to restore optional/channel
 # deps (e.g. @buape/carbon, grammy) that were skipped above.
 # Native build failures (sharp, node-gyp) are non-fatal here (|| true).
+# Restore optional/channel deps that --ignore-scripts skips.
+# Uses npm_config_ignore_scripts=true so that the internal npm install
+# doesn't trigger sharp's native build (which fails on Termux).
+# The postinstall-bundled-plugins.mjs installs pure JS channel deps only.
 OPENCLAW_DIR="$(npm root -g)/openclaw"
-if [ -d "$OPENCLAW_DIR" ] && [ "$OPENCLAW_UPDATED" = true ]; then
-    echo "Restoring optional dependencies..."
-    (cd "$OPENCLAW_DIR" && npm install --no-fund --no-audit 2>/dev/null) || true
+if [ -d "$OPENCLAW_DIR" ]; then
+    if ! node -e "require('$OPENCLAW_DIR/node_modules/@buape/carbon')" 2>/dev/null; then
+        echo "Restoring optional dependencies..."
+        (cd "$OPENCLAW_DIR" && npm_config_ignore_scripts=true node scripts/postinstall-bundled-plugins.mjs 2>/dev/null) || true
+    fi
 fi
 
 bash "$SCRIPT_DIR/patches/openclaw-apply-patches.sh"

@@ -36,12 +36,12 @@ npm install -g openclaw@latest --ignore-scripts
 echo ""
 echo -e "${GREEN}[OK]${NC}   OpenClaw installed"
 
-# Reinstall dependencies without --ignore-scripts to restore optional/channel
-# deps (e.g. @buape/carbon, grammy) that were skipped above.
+# Restore optional/channel deps that --ignore-scripts skips.
+# Uses npm_config_ignore_scripts=true so sharp's native build doesn't block.
 OPENCLAW_DIR="$(npm root -g)/openclaw"
 if [ -d "$OPENCLAW_DIR" ]; then
     echo "Restoring optional dependencies..."
-    (cd "$OPENCLAW_DIR" && npm install --no-fund --no-audit 2>/dev/null) || true
+    (cd "$OPENCLAW_DIR" && npm_config_ignore_scripts=true node scripts/postinstall-bundled-plugins.mjs 2>/dev/null) || true
 fi
 
 bash "$SCRIPT_DIR/patches/openclaw-apply-patches.sh"
