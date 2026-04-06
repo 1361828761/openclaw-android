@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Script v1.0.20] - 2026-04-06
+
+### Fixed
+
+- Fix dep restore blocked by sharp build failure — `npm install` inside openclaw dir triggers sharp's native build which fails on Termux, blocking all other deps. Now runs `postinstall-bundled-plugins.mjs` directly with `npm_config_ignore_scripts=true` to skip sharp while installing channel deps ([#92](https://github.com/AidanPark/openclaw-android/issues/92))
+- Fix dep restore skipped when openclaw already at latest version — check `@buape/carbon` presence instead of `OPENCLAW_UPDATED` flag
+
 ## [Script v1.0.19] - 2026-04-06
 
 ### Fixed
