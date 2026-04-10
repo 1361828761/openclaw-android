@@ -1,601 +1,290 @@
-# OpenClaw on Android
+# 统一 AI 平台安装器
 
-[한국어](README.ko.md) | [中文](README.zh.md)
-
-<img src="docs/images/openclaw_android.jpg" alt="OpenClaw on Android">
+<img src="docs/images/openclaw_android.jpg" alt="统一 AI 平台">
 
 ![Android 7.0+](https://img.shields.io/badge/Android-7.0%2B-brightgreen)
 ![Termux](https://img.shields.io/badge/Termux-Required-orange)
-![No proot](https://img.shields.io/badge/proot--distro-Not%20Required-blue)
-![License MIT](https://img.shields.io/github/license/AidanPark/openclaw-android)
-![GitHub Stars](https://img.shields.io/github/stars/AidanPark/openclaw-android)
+![License MIT](https://img.shields.io/github/license/1361828761/openclaw-android)
+![GitHub Stars](https://img.shields.io/github/stars/1361828761/openclaw-android)
 
-Because Android deserves a shell.
+在 Android (Termux) 上运行 OpenClaw 和 NEW API 的统一安装器。
 
-## No Linux install required
+## 功能特点
 
-The standard approach to running OpenClaw on Android requires installing proot-distro with Linux, adding 700MB-1GB of overhead. OpenClaw on Android eliminates this by installing just the glibc dynamic linker (ld.so), letting you run OpenClaw without a full Linux distribution.
+- **双平台支持**：可选择安装 OpenClaw、NEW API 或两者同时安装
+- **无需完整 Linux**：无需 proot-distro，只安装必要的 glibc 动态链接器
+- **存储开销小**：相比完整 Linux 发行版，节省约 1GB 存储空间
+- **一键安装**：一条命令自动完成所有配置
+- **可选工具**：支持安装多种 AI 工具（code-server、Claude Code、Gemini CLI 等）
+- **中文界面**：安装过程全中文提示
 
-**Standard approach**: Install a full Linux distribution in Termux via proot-distro.
+## 支持的平台
 
-```
-┌───────────────────────────────────────────────────┐
-│ Linux Kernel                                      │
-│ ┌───────────────────────────────────────────────┐ │
-│ │ Android · Bionic libc · Termux                │ │
-│ │ ┌───────────────────────────────────────────┐ │ │
-│ │ │ proot-distro · Debian/Ubuntu              │ │ │
-│ │ │ ┌───────────────────────────────────────┐ │ │ │
-│ │ │ │ GNU glibc                             │ │ │ │
-│ │ │ │ Node.js → OpenClaw                    │ │ │ │
-│ │ │ └───────────────────────────────────────┘ │ │ │
-│ │ └───────────────────────────────────────────┘ │ │
-│ └───────────────────────────────────────────────┘ │
-└───────────────────────────────────────────────────┘
-```
+### OpenClaw
 
-**This project**: No proot-distro — just the glibc dynamic linker.
+AI Agent 平台，可以调用各种 AI 服务（OpenAI、Claude、Gemini 等）实现自动化任务。
 
-```
-┌───────────────────────────────────────────────────┐
-│ Linux Kernel                                      │
-│ ┌───────────────────────────────────────────────┐ │
-│ │ Android · Bionic libc · Termux                │ │
-│ │ ┌───────────────────────────────────────────┐ │ │
-│ │ │ glibc ld.so (linker only)                 │ │ │
-│ │ │ ld.so → Node.js → OpenClaw                │ │ │
-│ │ └───────────────────────────────────────────┘ │ │
-│ └───────────────────────────────────────────────┘ │
-└───────────────────────────────────────────────────┘
-```
+**主要功能：**
+- 多 AI 提供商集成（OpenAI、Claude、Gemini 等）
+- 插件系统（Skill）扩展功能
+- Web UI 控制面板
+- 支持浏览器自动化
 
-| | Standard (proot-distro) | This project |
-|---|---|---|
-| Storage overhead | 1-2GB (Linux + packages) | ~200MB |
-| Setup time | 20-30 min | 3-10 min |
-| Performance | Slower (proot layer) | Native speed |
-| Setup steps | Install distro, configure Linux, install Node.js, fix paths... | Run one command |
+### NEW API
 
-## <img src="docs/images/claw-icon.svg" width="28" alt="Claw icon"> Claw App
+AI API 聚合工具，统一管理多种 AI API，提供灵活的 API 路由和分发功能。
 
-A standalone Android app is also available. It bundles a terminal emulator and a WebView-based UI into a single APK — no Termux required.
+**主要功能：**
+- 多 API 密钥管理
+- API 流量分发与负载均衡
+- 支持多种 AI 模型
+- 简洁的配置管理
 
-- One-tap setup: bootstrap, Node.js, and OpenClaw installed from within the app
-- Built-in dashboard for gateway control, runtime info, and tool management
-- Works independently of Termux — installing the app does not affect an existing Termux + `oa` setup
+## 系统要求
 
-Download the APK from the [Releases](https://github.com/AidanPark/openclaw-android/releases) page.
+- Android 7.0 或更高版本（推荐 Android 10+）
+- 约 1GB 可用存储空间
+- Wi-Fi 或移动数据连接
 
-## Requirements
+## 快速开始
 
-- Android 7.0 or higher (Android 10+ recommended)
-- ~1GB free storage
-- Wi-Fi or mobile data connection
+### 1. 安装 Termux
 
-## What It Does
+> **重要提示**：Play Store 版本的 Termux 已停止维护，无法正常使用。必须从 F-Droid 安装。
 
-The installer automatically resolves the differences between Termux and standard Linux. There's nothing you need to do manually — the single install command handles all of these:
+1. 用手机浏览器打开 [f-droid.org](https://f-droid.org)
+2. 搜索 `Termux`，然后点击 **Download APK** 下载并安装
 
-1. **glibc environment** — Installs the glibc dynamic linker (via pacman's glibc-runner) so standard Linux binaries run without modification
-2. **Node.js (glibc)** — Downloads official Node.js linux-arm64 and wraps it with an ld.so loader script (no patchelf, which causes segfault on Android)
-3. **Path conversion** — Automatically converts standard Linux paths (`/tmp`, `/bin/sh`, `/usr/bin/env`) to Termux paths
-4. **Temp folder setup** — Configures an accessible temp folder for Android
-5. **Service manager bypass** — Configures normal operation without systemd
-6. **OpenCode integration** — If selected, installs OpenCode using proot + ld.so concatenation for Bun standalone binaries
+### 2. 初始设置
 
-## Step-by-Step Setup (from a fresh phone)
-
-1. [Prepare Your Phone](#step-1-prepare-your-phone)
-2. [Install Termux](#step-2-install-termux)
-3. [Initial Termux Setup](#step-3-initial-termux-setup)
-4. [Install OpenClaw](#step-4-install-openclaw) — one command
-5. [Start OpenClaw Setup](#step-5-start-openclaw-setup)
-6. [Start OpenClaw (Gateway)](#step-6-start-openclaw-gateway)
-
-### Step 1: Prepare Your Phone
-
-Configure Developer Options, Stay Awake, charge limit, and battery optimization. See the [Keeping Processes Alive guide](docs/disable-phantom-process-killer.md) for step-by-step instructions.
-
-### Step 2: Install Termux
-
-> **Important**: The Play Store version of Termux is discontinued and will not work. You must install from F-Droid.
-
-1. Open your phone's browser and go to [f-droid.org](https://f-droid.org)
-2. Search for `Termux`, then tap **Download APK** to download and install
-   - Allow "Install from unknown sources" when prompted
-
-### Step 3: Initial Termux Setup
-
-Open the Termux app and paste the following command to install curl (needed for the next step).
+打开 Termux 应用，粘贴以下命令：
 
 ```bash
 pkg update -y && pkg install -y curl
 ```
 
-> You may be asked to choose a mirror on first run. Pick any — a geographically closer mirror will be faster.
+> 首次运行时可能会要求你选择镜像源。随便选一个就行，地理位置较近的会更快。
 
-### Step 4: Install OpenClaw
+### 3. 安装平台
 
-> **Tip: Use SSH for easier typing**
-> From this step on, you can type commands from your computer keyboard instead of the phone screen. See the [Termux SSH Setup Guide](docs/termux-ssh-guide.md) for details.
-
-Paste the following command in Termux.
+运行以下命令开始安装：
 
 ```bash
 curl -sL myopenclawhub.com/install | bash && source ~/.bashrc
 ```
 
-Everything is installed automatically with a single command. This takes 3–10 minutes depending on network speed and device. Wi-Fi is recommended.
+安装过程中会有交互式提示让你选择：
 
-Once complete, the OpenClaw version is displayed along with instructions to run `openclaw onboard`.
+1. **选择平台**：是否安装 OpenClaw？是否安装 NEW API？
+2. **可选工具**：
+   - tmux（终端复用器）
+   - ttyd（网页终端）
+   - dufs（文件服务器）
+   - android-tools（ADB 工具）
+   - Chromium（浏览器自动化，约 400MB）
+   - code-server（浏览器 IDE）
+   - OpenCode（AI 编程助手）
+   - Claude Code CLI
+   - Gemini CLI
+   - Codex CLI
 
-### Step 5: Start OpenClaw Setup
+安装完成后会显示已选择的平台和管理命令。
 
-As instructed in the installation output, run:
+## 访问服务
 
-```bash
-openclaw onboard
-```
+### 从手机访问
 
-Follow the on-screen instructions to complete the initial setup.
+- **OpenClaw**：在 Termux 中运行 `manage-openclaw start`，然后在浏览器打开显示的地址
+- **NEW API**：在 Termux 中运行 `manage-newapi start`，然后在浏览器打开 `http://localhost:3000`
 
-![openclaw onboard](docs/images/openclaw-onboard.png)
+### 从电脑访问
 
-### Step 6: Start OpenClaw (Gateway)
+要让电脑也能访问手机上的服务，需要建立 SSH 隧道：
 
-Once setup is complete, start the gateway:
+1. **在手机上启动服务**：
+   ```bash
+   manage-openclaw start
+   # 或
+   manage-newapi start
+   ```
 
-> **Important**: Run `openclaw gateway` directly in the Termux app on your phone, not via SSH. If you run it over SSH, the gateway will stop when the SSH session disconnects.
+2. **在同一网络的电脑上**打开浏览器：
+   - OpenClaw：`http://<手机IP>:8080`
+   - NEW API：`http://<手机IP>:3000`
 
-The gateway occupies the terminal while running, so open a new tab for it. Tap the **hamburger icon (☰)** on the bottom menu bar, or swipe right from the left edge of the screen (above the bottom menu bar) to open the side menu. Then tap **NEW SESSION**.
+> 获取手机 IP：可以在 Termux 中运行 `ifconfig` 或 `ip addr` 查看
 
-<img src="docs/images/termux_menu.png" width="300" alt="Termux side menu">
+## 管理命令
 
-In the new tab, run:
-
-```bash
-openclaw gateway
-```
-
-<img src="docs/images/termux_tab_1.png" width="300" alt="openclaw gateway running">
-
-> To stop the gateway, press `Ctrl+C`. Do not use `Ctrl+Z` — it only suspends the process without terminating it.
-
-## Keeping Processes Alive
-
-Android may kill background processes or throttle them when the screen is off. See the [Keeping Processes Alive guide](docs/disable-phantom-process-killer.md) for all recommended settings (Developer Options, Stay Awake, charge limit, battery optimization, and Phantom Process Killer).
-
-## Access the Dashboard from Your PC
-
-See the [Termux SSH Setup Guide](docs/termux-ssh-guide.md) for SSH access and dashboard tunnel setup.
-
-## Managing Multiple Devices
-
-If you run OpenClaw on multiple devices on the same network, use the <a href="https://myopenclawhub.com" target="_blank">Dashboard Connect</a> tool to manage them from your PC.
-
-- Save connection settings (IP, token, ports) for each device with a nickname
-- Generates the SSH tunnel command and dashboard URL automatically
-- **Your data stays local** — Connection settings (IP, token, ports) are saved only in your browser's localStorage and are never sent to any server.
-
-## CLI Reference
-
-After installation, the `oa` command is available for managing your installation:
-
-| Option | Description |
-|--------|-------------|
-| `oa --update` | Update OpenClaw and Android patches |
-| `oa --install` | Install optional tools (tmux, code-server, AI CLIs, etc.) |
-| `oa --uninstall` | Remove OpenClaw on Android |
-| `oa --backup` | Create a full backup of OpenClaw data |
-| `oa --restore` | Restore from a backup |
-| `oa --status` | Show installation status and all installed components |
-| `oa --version` | Show version |
-| `oa --help` | Show available options |
-
-## Update
+### OpenClaw 管理
 
 ```bash
-oa --update && source ~/.bashrc
+manage-openclaw start     # 启动 OpenClaw
+manage-openclaw stop      # 停止 OpenClaw
+manage-openclaw restart   # 重启 OpenClaw
+manage-openclaw status    # 查看状态
+manage-openclaw logs      # 查看日志
 ```
 
-This single command updates all installed components at once:
+### NEW API 管理
 
-- **OpenClaw** — Core package (`openclaw@latest`)
-- **code-server** — Browser IDE
-- **OpenCode** — AI coding assistant
-- **AI CLI tools** — Claude Code, Gemini CLI, Codex CLI
-- **Android patches** — Compatibility patches from this project
-
-Already up-to-date components are skipped. Components you haven't installed are not touched — only what's already on your device gets updated. Safe to run multiple times.
-
-> If the `oa` command is not available (older installations), run it with curl:
-> ```bash
-> curl -sL myopenclawhub.com/update | bash && source ~/.bashrc
-> ```
-
-## Backup & Restore
-
-OpenClaw's built-in backup command (`openclaw backup create`) often fails on Android because it relies on hardlinks, which are blocked in Android's app-private storage. The `oa --backup` command works around this by using `tar` directly while maintaining full compatibility with the OpenClaw backup specification.
-
-To create a backup:
 ```bash
-oa --backup
+manage-newapi start [端口]    # 启动 NEW API (默认端口: 3000)
+manage-newapi stop            # 停止 NEW API
+manage-newapi restart [端口]  # 重启 NEW API
+manage-newapi status          # 查看状态
+manage-newapi logs            # 查看日志
 ```
-Backups are stored in `~/.openclaw-android/backup/` with a timestamped filename (e.g., `2026-03-14T00-00-00.000Z-openclaw-backup.tar.gz`). You can also specify a custom path: `oa --backup ~/my-backups/`. Each backup includes your configuration, state, workspaces, and agents.
 
-To restore from a backup:
+### 查看所有平台状态
+
 ```bash
-oa --restore
+status-all
 ```
-This command lists all available backups in the default backup directory. Simply select the number of the backup you wish to restore. The tool automatically detects the platform from the backup manifest and handles the restoration to `~/.openclaw/`. Note that this will overwrite existing data, so a confirmation is required.
 
-## Troubleshooting
+## 更新
 
-See the [Troubleshooting Guide](docs/troubleshooting.md) for detailed solutions.
+### 单独更新 OpenClaw
 
-## Performance
+```bash
+update-openclaw.sh
+```
 
-CLI commands like `openclaw status` may feel slower than on a PC. This is because each command needs to read many files, and the phone's storage is slower than a PC's, with Android's security processing adding overhead.
+### 单独更新 NEW API
 
-However, **once the gateway is running, there's no difference**. The process stays in memory so files don't need to be re-read, and AI responses are processed on external servers — the same speed as on a PC.
+```bash
+update-newapi.sh
+```
 
-## Local LLM on Android
+## 卸载
 
-OpenClaw supports local LLM inference via [node-llama-cpp](https://github.com/withcatai/node-llama-cpp). The prebuilt native binary (`@node-llama-cpp/linux-arm64`) is included with the installation and loads successfully under the glibc environment — **local LLM is technically functional on the phone**.
+### 单独卸载 OpenClaw
 
-However, there are practical constraints:
+```bash
+uninstall-openclaw.sh
+```
 
-| Constraint | Details |
-|------------|---------|
-| RAM | GGUF models need at least 2-4GB of free memory (7B model, Q4 quantization). Phone RAM is shared with Android and other apps |
-| Storage | Model files range from 4GB to 70GB+. Phone storage fills up fast |
-| Speed | CPU-only inference on ARM is very slow. Android does not support GPU offloading for llama.cpp |
-| Use case | OpenClaw primarily routes to cloud LLM APIs (OpenAI, Gemini, etc.) which respond at the same speed as on a PC. Local inference is a supplementary feature |
+### 单独卸载 NEW API
 
-For experimentation, small models like TinyLlama 1.1B (Q4, ~670MB) can run on the phone. For production use, cloud LLM providers are recommended.
+```bash
+uninstall-newapi.sh
+```
 
-> **Why `--ignore-scripts`?** The installer uses `npm install -g openclaw@latest --ignore-scripts` because node-llama-cpp's postinstall script attempts to compile llama.cpp from source via cmake — a process that takes 30+ minutes on a phone and fails due to toolchain incompatibilities. The prebuilt binaries work without this compilation step, so the postinstall is safely skipped.
+### 卸载所有
 
-<details>
-<summary>Technical Documentation for Developers</summary>
+```bash
+uninstall.sh
+```
 
-## Installed Components
+卸载过程中会提示是否保留 glibc 组件（如果两个平台都安装了，建议保留）。
 
-The installer sets up infrastructure, platform packages, and optional tools across multiple package managers. Core infrastructure and platform dependencies are installed automatically; optional tools are individually prompted during install.
+## 可选工具
 
-### Core Infrastructure
+安装过程中可以选择以下工具：
 
-| Component | Role | Install Method |
-|-----------|------|----------------|
-| git | Version control, npm git dependencies | `pkg install` |
+| 工具 | 说明 |
+|------|------|
+| tmux | 终端复用器，保持后台任务运行 |
+| ttyd | 网页终端，可以通过浏览器访问 |
+| dufs | 文件服务器，方便传输文件 |
+| android-tools | ADB 工具，用于与安卓设备通信 |
+| Chromium | 浏览器自动化（约 400MB） |
+| code-server | 浏览器 IDE，网页版 VS Code |
+| OpenCode | AI 编程助手 |
+| Claude Code CLI | Anthropic AI CLI |
+| Gemini CLI | Google Gemini CLI |
+| Codex CLI | OpenAI Codex CLI |
 
-### Agent Platform Runtime Dependencies
-
-These are controlled by the platform's `config.env` flags. For OpenClaw, all are installed:
-
-| Component | Role | Install Method |
-|-----------|------|----------------|
-| [pacman](https://wiki.archlinux.org/title/Pacman) | Package manager for glibc packages | `pkg install` |
-| [glibc-runner](https://github.com/termux-pacman/glibc-packages) | glibc dynamic linker — enables standard Linux binaries on Android | `pacman -Sy` |
-| [Node.js](https://nodejs.org/) v22 LTS (linux-arm64) | JavaScript runtime for OpenClaw | Direct download from nodejs.org |
-| python | Build scripts for native C/C++ addons (node-gyp) | `pkg install` |
-| make | Makefile execution for native modules | `pkg install` |
-| cmake | CMake-based native module builds | `pkg install` |
-| clang | C/C++ compiler for native modules | `pkg install` |
-| binutils | Binary utilities (llvm-ar) for native builds | `pkg install` |
-
-### OpenClaw Platform
-
-| Component | Role | Install Method |
-|-----------|------|----------------|
-| [OpenClaw](https://github.com/openclaw/openclaw) | AI agent platform (core) | `npm install -g` |
-| [clawdhub](https://github.com/AidanPark/clawdhub) | Skill manager for OpenClaw | `npm install -g` |
-| [PyYAML](https://pyyaml.org/) | YAML parser for `.skill` packaging | `pip install` |
-| libvips | Image processing headers for sharp build | `pkg install` (on update) |
-
-### Optional Tools (prompted during install)
-
-Each tool is offered via an individual Y/n prompt. You choose which ones to install.
-
-| Component | Role | Install Method |
-|-----------|------|----------------|
-| [tmux](https://github.com/tmux/tmux) | Terminal multiplexer for background sessions | `pkg install` |
-| [ttyd](https://github.com/tsl0922/ttyd) | Web terminal — access Termux from a browser | `pkg install` |
-| [dufs](https://github.com/sigoden/dufs) | HTTP/WebDAV file server for browser-based file transfer | `pkg install` |
-| [android-tools](https://developer.android.com/tools/adb) | ADB for disabling Phantom Process Killer | `pkg install` |
-| [code-server](https://github.com/coder/code-server) | Browser-based VS Code IDE | Direct download from GitHub |
-| [OpenCode](https://opencode.ai/) | AI coding assistant (TUI). Auto-installs [Bun](https://bun.sh/) and [proot](https://proot-me.github.io/) as dependencies | `bun install -g` |
-| [Chromium](https://www.chromium.org/) | Browser automation for OpenClaw (~400MB) | Custom install script |
-| [Playwright](https://playwright.dev/) | Browser automation library (requires Chromium). Auto-configures `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | Custom install script |
-| [Claude Code](https://github.com/anthropics/claude-code) (Anthropic) | AI CLI tool | `npm install -g` |
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) (Google) | AI CLI tool | `npm install -g` |
-| [Codex CLI](https://github.com/openai/codex) (OpenAI) | AI CLI tool | `npm install -g` |
-
-## Project Structure
+## 项目结构
 
 ```
-openclaw-android/
-├── bootstrap.sh                # curl | bash one-liner installer (downloader)
-├── install.sh                  # Platform-aware installer (entry point)
-├── oa.sh                       # Unified CLI (installed as $PREFIX/bin/oa)
-├── post-setup.sh               # Claw App post-bootstrap setup (OTA delivery)
-├── update.sh                   # Thin wrapper (downloads and runs update-core.sh)
-├── update-core.sh              # Lightweight updater for existing installations
-├── uninstall.sh                # Clean removal (orchestrator)
-├── patches/
-│   ├── glibc-compat.js        # Node.js runtime patches (os.cpus, networkInterfaces)
-│   ├── argon2-stub.js          # JS stub for argon2 native module (code-server)
-│   ├── termux-compat.h         # C header for Bionic native builds (sharp)
-│   ├── spawn.h                 # POSIX spawn stub header
-│   ├── systemctl               # systemd stub for Termux
-│   ├── apply-patches.sh        # Legacy patch orchestrator (v1.0.2 compat)
-│   └── patch-paths.sh          # Legacy path fixer (v1.0.2 compat)
-├── scripts/
-│   ├── lib.sh                  # Shared function library (colors, platform detection, prompts)
-│   ├── check-env.sh            # Pre-flight environment check
-│   ├── install-infra-deps.sh   # Core infrastructure packages (L1)
-│   ├── install-glibc.sh        # glibc-runner installation (L2 conditional)
-│   ├── install-nodejs.sh       # Node.js glibc wrapper installation (L2 conditional)
-│   ├── install-build-tools.sh  # Build tools for native modules (L2 conditional)
-│   ├── backup.sh               # Backup and restore OpenClaw data (oa --backup/--restore)
-│   ├── build-sharp.sh          # Build sharp native module (image processing)
-│   ├── install-chromium.sh     # Install Chromium for browser automation
-│   ├── install-playwright.sh   # Install Playwright browser automation library
-│   ├── install-code-server.sh  # Install/update code-server (browser IDE)
-│   ├── install-opencode.sh     # Install OpenCode
-│   ├── setup-env.sh            # Configure environment variables
-│   └── setup-paths.sh          # Create directories and symlinks
+.
+├── install.sh              # 主安装脚本
+├── uninstall.sh            # 卸载脚本
+├── update-openclaw.sh      # 更新 OpenClaw
+├── update-newapi.sh        # 更新 NEW API
+├── manage-openclaw.sh      # OpenClaw 管理脚本
+├── manage-newapi.sh        # NEW API 管理脚本
+├── status-all.sh           # 查看所有平台状态
+├── uninstall-openclaw.sh   # 单独卸载 OpenClaw
+├── uninstall-newapi.sh     # 单独卸载 NEW API
 ├── platforms/
-│   ├── openclaw/               # OpenClaw platform plugin
-│   │   ├── config.env          # Platform metadata and dependency declarations
-│   │   ├── env.sh              # Platform-specific environment variables
-│   │   ├── install.sh          # Platform package install (npm, patches, clawdhub)
-│   │   ├── update.sh           # Platform package update
-│   │   ├── uninstall.sh        # Platform package removal
-│   │   ├── status.sh           # Platform status display
-│   │   ├── verify.sh           # Platform verification checks
-│   │   └── patches/            # Platform-specific patches
-│   │       ├── openclaw-apply-patches.sh
-│   │       ├── openclaw-patch-paths.sh
-│   │       └── openclaw-build-sharp.sh
-├── tests/
-│   └── verify-install.sh       # Post-install verification (orchestrator + platform)
-└── docs/
-    ├── disable-phantom-process-killer.md    # Keeping Processes Alive guide (EN)
-    ├── disable-phantom-process-killer.ko.md # Keeping Processes Alive guide (KO)
-    ├── termux-ssh-guide.md     # Termux SSH setup guide (EN)
-    ├── termux-ssh-guide.ko.md  # Termux SSH setup guide (KO)
-    ├── troubleshooting.md      # Troubleshooting guide (EN)
-    ├── troubleshooting.ko.md   # Troubleshooting guide (KO)
-    └── images/                 # Screenshots and images
+│   ├── openclaw/          # OpenClaw 平台文件
+│   │   ├── install.sh
+│   │   ├── start.sh
+│   │   ├── stop.sh
+│   │   ├── status.sh
+│   │   ├── uninstall.sh
+│   │   └── update.sh
+│   └── newapi/            # NEW API 平台文件
+│       ├── install.sh
+│       ├── start.sh
+│       ├── stop.sh
+│       ├── status.sh
+│       ├── uninstall.sh
+│       └── update.sh
+├── scripts/
+│   ├── lib.sh             # 公共函数库
+│   ├── install-glibc.sh   # 安装 glibc
+│   ├── install-nodejs.sh  # 安装 Node.js
+│   └── ...
+└── docs/                   # 文档
 ```
 
-## Architecture
+## 数据存储位置
 
-The project uses a **platform-plugin architecture** that separates platform-agnostic infrastructure from platform-specific code:
+- **OpenClaw**：`~/.openclaw-android/`
+- **NEW API**：`~/.newapi-termux/`
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Orchestrators (install.sh, update-core.sh, uninstall.sh)  │
-│  ── Platform-agnostic. Read config.env and delegate.       │
-├─────────────────────────────────────────────────────────────┤
-│  Shared Scripts (scripts/)                                  │
-│  ── L1: install-infra-deps.sh (always)                     │
-│  ── L2: install-glibc.sh, install-nodejs.sh,               │
-│         install-build-tools.sh (conditional on config.env) │
-│  ── L3: Optional tools (user-selected)                     │
-├─────────────────────────────────────────────────────────────┤
-│  Platform Plugins (platforms/<name>/)                       │
-│  ── config.env: declares dependencies (PLATFORM_NEEDS_*)  │
-│  ── install.sh / update.sh / uninstall.sh / ...            │
-└─────────────────────────────────────────────────────────────┘
-```
+## 常见问题
 
-**Dependency layers:**
+### 安装失败怎么办？
 
-| Layer | Scope | Examples | Controlled by |
-|-------|-------|----------|---------------|
-| L1 | Infrastructure (always installed) | git, `pkg update` | Orchestrator |
-| L2 | Platform runtime (conditional) | glibc, Node.js, build tools | `config.env` flags |
-| L3 | Optional tools (user-selected) | tmux, code-server, AI CLIs | User prompts |
+1. 确保 Termux 是从 F-Droid 安装的（不是 Play Store）
+2. 确保网络连接稳定
+3. 尝试重启 Termux 后重试
+4. 如果下载失败，脚本会自动尝试备用镜像
 
-Each platform declares its L2 dependencies in `config.env`:
+### 无法启动服务？
 
-```bash
-# platforms/openclaw/config.env
-PLATFORM_NEEDS_GLIBC=true
-PLATFORM_NEEDS_NODEJS=true
-PLATFORM_NEEDS_BUILD_TOOLS=true
-```
+1. 检查端口是否被占用：`status-all`
+2. 查看日志排查问题：`manage-openclaw logs` 或 `manage-newapi logs`
+3. 尝试更换端口：`manage-newapi start 8080`
 
-The orchestrator reads these flags and conditionally runs the corresponding install scripts. A platform that doesn't need certain dependencies simply sets the corresponding flags to `false` and those heavy dependencies are skipped entirely.
+### 如何从电脑访问？
 
-## Detailed Installation Flow
+1. 确保手机和电��在同一 WiFi 网络下
+2. 获取手机局域网 IP：`ifconfig` 或 `ip addr`
+3. 在电脑浏览器打开 `http://<手机IP>:端口`
 
-Running `bash install.sh` executes the following 8 steps in order.
+### 服务在后台运行吗？
 
-### [1/8] Environment Check — `scripts/check-env.sh`
+默认情况下，服务运行在终端前台。要在后台运行：
 
-Validates that the current environment is suitable before starting installation.
+1. 使用 tmux（需要安装）：
+   ```bash
+   tmux new -s openclaw
+   manage-openclaw start
+   # 按 Ctrl+B 然后按 D 退出 tmux
+   ```
 
-- **Termux detection**: Checks for the `$PREFIX` environment variable. Exits immediately if not in Termux
-- **Architecture check**: Runs `uname -m` to verify CPU architecture (aarch64 recommended, armv7l supported, x86_64 treated as emulator)
-- **Disk space**: Ensures at least 1000MB free on the `$PREFIX` partition. Errors if insufficient
-- **Existing installation**: If `openclaw` command already exists, shows current version and notes this is a reinstall/upgrade
-- **Node.js pre-check**: If Node.js is already installed, shows version and warns if below 22
-- **Phantom Process Killer** (Android 12+): Shows an informational note about the Phantom Process Killer with a link to the [disable guide](docs/disable-phantom-process-killer.md)
+2. 重新进入 tmux：
+   ```bash
+   tmux attach -t openclaw
+   ```
 
-### [2/8] Platform Selection
+### 如何保持服务运行？
 
-Selects the platform to install. Currently hardcoded to `openclaw`. Future versions will present a selection UI when multiple platforms are available.
+Android 可能会在屏幕关闭时杀死后台进程。建议：
+- 关闭电池优化（设置 > 应用 > Termux > 电池优化）
+- 开启"开发者选项"中的"保持唤醒"
+- 详细设置请参考 [保持进程存活指南](docs/disable-phantom-process-killer.md)
 
-Loads the platform's `config.env` via `load_platform_config()` from `scripts/lib.sh`, which exports all `PLATFORM_*` variables for use by subsequent steps.
+## 开发者
 
-### [3/8] Optional Tools Selection (L3)
-
-Presents 11 individual Y/n prompts (via `/dev/tty`) for optional tools:
-
-- tmux, ttyd, dufs, android-tools
-- Chromium, Playwright
-- code-server, OpenCode
-- Claude Code, Gemini CLI, Codex CLI
-
-All selections are collected upfront before any installation begins. This allows the user to make all decisions at once and walk away during the install.
-
-### [4/8] Core Infrastructure (L1) — `scripts/install-infra-deps.sh` + `scripts/setup-paths.sh`
-
-Always runs regardless of platform selection.
-
-**install-infra-deps.sh:**
-- Runs `pkg update -y && pkg upgrade -y` to refresh and upgrade packages
-- Installs `git` (required for npm git dependencies and repo cloning)
-
-**setup-paths.sh:**
-- Creates `$PREFIX/tmp` and `$HOME/.openclaw-android/patches` directories
-- Displays standard Linux path mappings (`/bin/sh`, `/usr/bin/env`, `/tmp`) to Termux equivalents
-
-### [5/8] Platform Runtime Dependencies (L2)
-
-Conditionally installs runtime dependencies based on the platform's `config.env` flags:
-
-| Flag | Script | What it installs |
-|------|--------|-----------------|
-| `PLATFORM_NEEDS_GLIBC=true` | `scripts/install-glibc.sh` | pacman, glibc-runner (provides `ld-linux-aarch64.so.1`) |
-| `PLATFORM_NEEDS_NODEJS=true` | `scripts/install-nodejs.sh` | Node.js v22 LTS linux-arm64, grun-style wrapper scripts |
-| `PLATFORM_NEEDS_BUILD_TOOLS=true` | `scripts/install-build-tools.sh` | python, make, cmake, clang, binutils |
-
-Each script is self-contained with pre-checks and idempotent behavior (skips if already installed).
-
-### [6/8] Platform Package Install (L2) — `platforms/<platform>/install.sh`
-
-Delegates to the platform's own install script. For OpenClaw, this:
-
-1. Sets `CPATH` for glib-2.0 headers (needed for native module builds)
-2. Installs PyYAML via pip (for `.skill` packaging)
-3. Copies `glibc-compat.js` to `~/.openclaw-android/patches/`
-4. Installs `systemctl` stub to `$PREFIX/bin/`
-5. Runs `npm install -g openclaw@latest --ignore-scripts`
-6. Applies platform-specific patches via `openclaw-apply-patches.sh`
-7. Installs `clawdhub` (skill manager) and `undici` dependency if needed
-8. Runs `openclaw update` (includes building native modules like sharp)
-
-**[6.5] Environment Variables + CLI + Marker:**
-
-After platform install, the orchestrator:
-- Runs `setup-env.sh` to write the `.bashrc` environment block
-- Evaluates the platform's `env.sh` for platform-specific variables
-- Writes the platform marker file (`~/.openclaw-android/.platform`)
-- Installs `oa` CLI and `oaupdate` wrapper to `$PREFIX/bin/`
-- Copies `lib.sh`, `setup-env.sh`, and the platform directory to `~/.openclaw-android/` for use by the updater and uninstaller
-
-### [7/8] Install Optional Tools (L3)
-
-Installs the tools selected in Step 3:
-
-- **Termux packages**: tmux, ttyd, dufs, android-tools — installed via `pkg install`
-- **code-server**: Browser-based VS Code IDE with Termux-specific workarounds (replace bundled node, patch argon2, handle hard link failures)
-- **OpenCode**: AI coding assistant using proot + ld.so concatenation for Bun standalone binaries
-- **Chromium**: Browser automation support for OpenClaw (~400MB)
-- **Playwright**: Browser automation library (`playwright-core` via npm). Auto-sets `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` and `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` environment variables. Installs Chromium automatically if not already present
-- **AI CLI tools**: Claude Code, Gemini CLI, Codex CLI — installed via `npm install -g`
-
-### [8/8] Verification — `tests/verify-install.sh`
-
-Runs a two-tier verification:
-
-**Orchestrator checks (FAIL level):**
-
-| Check Item | PASS Condition |
-|------------|---------------|
-| Node.js version | `node -v` >= 22 |
-| npm | `npm` command exists |
-| TMPDIR | Environment variable is set |
-| OA_GLIBC | Set to `1` |
-| glibc-compat.js | File exists in `~/.openclaw-android/patches/` |
-| .glibc-arch | Marker file exists |
-| glibc dynamic linker | `ld-linux-aarch64.so.1` exists |
-| glibc node wrapper | Wrapper script at `~/.openclaw-android/bin/node` |
-| Directories | `~/.openclaw-android`, `$PREFIX/tmp` exist |
-| .bashrc | Contains environment variable block |
-
-**Orchestrator checks (WARN level, non-critical):**
-
-| Check Item | PASS Condition |
-|------------|---------------|
-| code-server | `code-server --version` succeeds |
-| opencode | `opencode` command available |
-
-**Platform verification** — delegates to `platforms/<platform>/verify.sh`:
-
-| Check Item | PASS Condition |
-|------------|---------------|
-| openclaw | `openclaw --version` succeeds |
-| CONTAINER | Set to `1` |
-| clawdhub | Command available |
-| ~/.openclaw | Directory exists |
-
-All FAIL-level items pass → PASSED. Any FAIL → shows reinstall instructions. WARN items do not cause failure.
-
-## Lightweight Updater Flow — `oa --update`
-
-Running `oa --update` (or `oaupdate` for backward compatibility) downloads the latest release tarball from GitHub and executes the following 5 steps.
-
-### [1/5] Pre-flight Check
-
-Validates the minimum conditions for updating.
-
-- Checks `$PREFIX` exists (Termux environment)
-- Checks `curl` is available
-- Detects platform from `~/.openclaw-android/.platform` marker file
-- Detects architecture: glibc (`.glibc-arch` marker) or Bionic (legacy)
-- Migrates old directory name if needed (`.openclaw-lite` → `.openclaw-android` — legacy compatibility)
-- **Phantom Process Killer** (Android 12+): Shows an informational note with a link to the [disable guide](docs/disable-phantom-process-killer.md)
-
-### [2/5] Download Latest Release
-
-Downloads the full repository tarball from GitHub and extracts to a temp directory. Validates that all required files exist:
-
-- `scripts/lib.sh`
-- `scripts/setup-env.sh`
-- `platforms/<platform>/config.env`
-- `platforms/<platform>/update.sh`
-
-### [3/5] Update Core Infrastructure
-
-Updates shared files used by the updater, uninstaller, and CLI:
-
-- Copies the latest platform directory to `~/.openclaw-android/platforms/`
-- Updates `lib.sh` and `setup-env.sh` in `~/.openclaw-android/scripts/`
-- Updates patch files (`glibc-compat.js`, `argon2-stub.js`, `spawn.h`, `systemctl`)
-- Updates `oa` CLI and `oaupdate` wrapper in `$PREFIX/bin/`
-- Updates `uninstall.sh` in `~/.openclaw-android/`
-- If Bionic architecture detected, performs automatic glibc migration
-- Runs `setup-env.sh` to refresh `.bashrc` environment block
-
-### [4/5] Update Platform
-
-Delegates to `platforms/<platform>/update.sh`. For OpenClaw, this:
-
-- Installs build dependencies (`libvips`, `binutils`)
-- Updates `openclaw` npm package to latest version
-- Re-applies platform-specific patches
-- Rebuilds sharp native module if openclaw was updated
-- Updates/installs `clawdhub` (skill manager)
-- Installs `undici` for clawdhub if needed (Node.js v24+)
-- Migrates skills from `~/skills/` to `~/.openclaw/workspace/skills/` if needed
-- Installs PyYAML if missing
-
-### [5/5] Update Optional Tools
-
-Updates tools that are already installed:
-
-- **code-server**: Runs `install-code-server.sh` in update mode. Skipped if not installed
-- **OpenCode**: Updates if installed; offers to install if not. Requires glibc architecture
-- **Chromium**: Updates if installed. Skipped if not installed
-- **AI CLI tools** (Claude Code, Gemini CLI, Codex CLI): Compares installed vs latest npm version, updates if needed. Tools not installed are not offered for installation
-
-</details>
+- 原作者：AidanPark ([https://github.com/AidanPark/openclaw-android](https://github.com/AidanPark/openclaw-android))
+- 修改者：1361828761
 
 ## License
 
-MIT
+MIT License
