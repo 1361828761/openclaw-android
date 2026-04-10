@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # bootstrap.sh - Download and run OpenClaw on Android installer
-# Usage: curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/bootstrap.sh | bash
+# Usage: curl -sL https://raw.githubusercontent.com/1361828761/openclaw-android/main/bootstrap.sh | bash
+
 set -euo pipefail
 
-REPO_TARBALL="https://github.com/AidanPark/openclaw-android/archive/refs/heads/main.tar.gz"
+REPO_TARBALL="https://github.com/1361828761/openclaw-android/archive/refs/heads/main.tar.gz"
+
 INSTALL_DIR="$HOME/.openclaw-android/installer"
 
 RED='\033[0;31m'
@@ -11,7 +13,7 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 echo ""
-echo -e "${BOLD}OpenClaw on Android - Bootstrap${NC}"
+echo -e "${BOLD}统一 AI 平台安装器 - Bootstrap${NC}"
 echo ""
 
 if ! command -v curl &>/dev/null; then
