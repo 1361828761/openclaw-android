@@ -33,7 +33,7 @@ if [ ! -f "$NEWAPI_BIN" ]; then
   echo -e "${GREEN}[OK]${NC} Download complete"
 fi
 
-# 创建wrapper
+# 创建wrapper（添加 glibc 环境下的 Go 兼容环境变量）
 cat > "$BIN_DIR/newapi-run" << 'EOF'
 #!/data/data/com.termux/files/usr/bin/bash
 unset LD_PRELOAD
@@ -41,6 +41,12 @@ export HOME="$HOME"
 export NEWAPI_DATA_DIR="$HOME/.newapi-termux/data"
 export NEWAPI_LOG_DIR="$HOME/.newapi-termux/logs"
 export NEWAPI_PORT="${NEWAPI_PORT:-3000}"
+
+# glibc 环境下的 Go 兼容修复
+export GODEBUG="netdns=cgo"
+export SSL_CERT_FILE="$PREFIX/glibc/etc/ssl/certs/ca-certificates.crt"
+export SSL_CERT_DIR="$PREFIX/glibc/etc/ssl/certs"
+
 GLIBC_LDSO="$PREFIX/glibc/lib/ld-linux-aarch64.so.1"
 NEWAPI_BIN="$HOME/.newapi-termux/bin/newapi"
 exec "$GLIBC_LDSO" --library-path "$PREFIX/glibc/lib" "$NEWAPI_BIN" "$@"
