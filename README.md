@@ -71,7 +71,7 @@ pkg update -y && pkg install -y curl
 
 ```bash
 # 方法一：从 GitHub 安装（推荐）
-curl -sL https://raw.githubusercontent.com/1361828761/openclaw-android/feature/integrate-newapi/bootstrap.sh | bash && source ~/.bashrc
+curl -sL https://raw.githubusercontent.com/1361828761/openclaw-android/main/bootstrap.sh | bash && source ~/.bashrc
 
 # 方法二：克隆仓库后安装（适合开发测试）
 git clone https://github.com/1361828761/openclaw-android.git ~/.openclaw-installer
